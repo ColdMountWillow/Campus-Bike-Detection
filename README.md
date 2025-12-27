@@ -16,8 +16,8 @@
 ### 1. 创建 Conda 环境（推荐）
 
 ```bash
-conda create -n bicycle_detection python=3.8
-conda activate bicycle_detection
+conda create -n cj python=3.10
+conda activate cj
 ```
 
 ### 2. 安装依赖
@@ -184,21 +184,63 @@ data/coco_bicycle/
 
 ### 步骤 2：训练模型
 
-使用 YOLOv8 训练 bicycle 检测模型：
+#### 模型选择
+
+YOLOv8 提供 5 种不同规模的模型，可根据需求选择：
+
+| 模型         | 参数量 | 速度 | 精度 | 推荐场景                 |
+| ------------ | ------ | ---- | ---- | ------------------------ |
+| `yolov8n.pt` | 3.2M   | 最快 | 较低 | 快速测试、CPU 推理       |
+| `yolov8s.pt` | 11.2M  | 快   | 中等 | **推荐：平衡速度和精度** |
+| `yolov8m.pt` | 25.9M  | 中等 | 较高 | 追求更高精度             |
+| `yolov8l.pt` | 43.7M  | 较慢 | 高   | 高精度需求               |
+| `yolov8x.pt` | 68.2M  | 最慢 | 最高 | 最高精度要求             |
+
+**推荐配置：**
+
+- **快速训练/测试**：使用 `yolov8n.pt`（默认）
+- **平衡性能**：使用 `yolov8s.pt` 或 `yolov8m.pt`（推荐）
+- **追求精度**：使用 `yolov8l.pt` 或 `yolov8x.pt`
+
+#### 训练命令
+
+**使用默认模型（yolov8n，轻量快速）：**
 
 ```bash
 python scripts/train.py --data data/coco_bicycle.yaml --model yolov8n.pt --epochs 20 --batch 16 --device 0
 ```
 
+**使用更强大的模型（推荐 yolov8s 或 yolov8m）：**
+
+```bash
+# 使用 yolov8s（推荐：平衡速度和精度）
+python scripts/train.py --data data/coco_bicycle.yaml --model yolov8s.pt --epochs 20 --batch 16 --device 0
+
+# 使用 yolov8m（更高精度）
+python scripts/train.py --data data/coco_bicycle.yaml --model yolov8m.pt --epochs 20 --batch 12 --device 0
+
+# 使用 yolov8l（高精度）
+python scripts/train.py --data data/coco_bicycle.yaml --model yolov8l.pt --epochs 20 --batch 8 --device 0
+
+# 使用 yolov8x（最高精度）
+python scripts/train.py --data data/coco_bicycle.yaml --model yolov8x.pt --epochs 20 --batch 4 --device 0
+```
+
 **参数说明：**
 
 - `--data`: 数据集配置文件（默认: `data/coco_bicycle.yaml`）
-- `--model`: 模型文件（默认: `yolov8n.pt`，可选: `yolov8s.pt`, `yolov8m.pt` 等）
-- `--epochs`: 训练轮数（默认: 20）
-- `--batch`: 批次大小（默认: 16，根据 GPU 内存调整）
+- `--model`: 模型文件（默认: `yolov8n.pt`，可选: `yolov8s.pt`, `yolov8m.pt`, `yolov8l.pt`, `yolov8x.pt`）
+- `--epochs`: 训练轮数（默认: 20，大模型可适当增加到 30-50）
+- `--batch`: 批次大小（默认: 16，大模型需要减小，建议：n/s=16, m=12, l=8, x=4）
 - `--device`: 设备（默认: 自动选择，可选: `0`, `1`, `cpu`）
 - `--project`: 项目目录（默认: `runs`）
 - `--name`: 实验名称（默认: `bicycle_exp`）
+
+**注意：**
+
+- 模型越大，训练时间越长，显存占用越多
+- 如果显存不足，减小 `--batch` 参数
+- 大模型通常需要更多训练轮数才能收敛（建议 30-50 epochs）
 
 **训练输出：**
 
@@ -212,9 +254,7 @@ python scripts/train.py --data data/coco_bicycle.yaml --model yolov8n.pt --epoch
 在验证集上评估模型性能：
 
 ```bash
-python scripts/val.py \
-    --weights runs/bicycle_exp/weights/best.pt \
-    --data data/coco_bicycle.yaml
+python scripts/val.py --weights runs/bicycle_exp/weights/best.pt --data data/coco_bicycle.yaml
 ```
 
 **输出指标：**
@@ -229,12 +269,7 @@ python scripts/val.py \
 对单张图片或图片目录进行推理：
 
 ```bash
-python scripts/infer.py \
-    --weights runs/bicycle_exp/weights/best.pt \
-    --source demo_images/ \
-    --conf 0.25 \
-    --save_dir outputs/vis \
-    --save_txt
+python scripts/infer.py --weights runs/bicycle_exp/weights/best.pt --source D:\Project\Campus-Bike-Detection\bike.jpg --conf 0.25 --save_dir outputs/vis --save_txt
 ```
 
 **参数说明：**
@@ -300,12 +335,19 @@ YOLOv8 训练过程中自动生成的目录，包含：
    - **置信度过滤**：根据阈值过滤低置信度检测
 4. **输出**：返回 bounding boxes（坐标、类别、置信度）
 
-### 为什么选择 YOLOv8n
+### 为什么选择 YOLOv8
 
-- **轻量级**：模型参数量小（约 3.2M），推理速度快
+- **模型系列丰富**：提供 n/s/m/l/x 五种规模，可根据需求选择
+- **高精度**：在 COCO 数据集上表现优异（YOLOv8n mAP 37.3，YOLOv8x mAP 53.9）
 - **易部署**：支持 ONNX、TensorRT 等格式导出
-- **高精度**：在 COCO 数据集上 mAP 达到 37.3（YOLOv8n）
 - **简单易用**：ultralytics 提供了简洁的 API，便于快速开发
+
+### 模型选择建议
+
+- **YOLOv8n（nano）**：适合快速测试、CPU 推理、资源受限场景
+- **YOLOv8s（small）**：**推荐**，平衡速度和精度，适合大多数应用
+- **YOLOv8m（medium）**：追求更高精度时的好选择
+- **YOLOv8l/x（large/xlarge）**：最高精度需求，需要更多计算资源
 
 ### 单类检测策略
 

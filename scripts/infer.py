@@ -13,7 +13,7 @@ from pathlib import Path
 # 添加 src 目录到路径
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
-from src.utils import filter_bicycle_results, draw_boxes, save_results_json
+from src.utils import filter_bicycle_results, draw_boxes, save_results_json, get_image_paths
 
 
 def process_image(model, img_path, conf_threshold, iou_threshold, save_dir, save_txt):
@@ -39,7 +39,7 @@ def process_image(model, img_path, conf_threshold, iou_threshold, save_dir, save
         verbose=False
     )
     
-    # 过滤只保留 bicycle（单类数据集 class_id=0，如果是 COCO80 则 class_id=1）
+    # 过滤只保留 bicycle
     # 这里假设是单类数据集，class_id=0 就是 bicycle
     filtered_results = filter_bicycle_results(results[0], is_single_class=True)
     
@@ -56,7 +56,7 @@ def process_image(model, img_path, conf_threshold, iou_threshold, save_dir, save
     save_path = save_dir / img_path.name
     cv2.imwrite(str(save_path), vis_img)
     
-    # 保存 txt/json 结果（可选）
+    # 保存 txt/json 结果
     if save_txt:
         # 保存 txt（YOLO 格式）
         txt_path = save_dir / (img_path.stem + '.txt')
@@ -129,14 +129,7 @@ def main():
     model = YOLO(args.weights)
     
     # 收集所有图片路径
-    if source_path.is_file():
-        image_paths = [source_path]
-    else:
-        # 支持的图片格式
-        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.webp'}
-        image_paths = [p for p in source_path.rglob('*') 
-                      if p.suffix.lower() in image_extensions]
-    
+    image_paths = get_image_paths(source_path)
     if not image_paths:
         raise ValueError(f"在 {source_path} 中未找到图片文件")
     

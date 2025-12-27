@@ -80,7 +80,6 @@ def prepare_coco_bicycle(coco_root, out_dir, split='train'):
     categories_dict = {cat['id']: cat for cat in coco_data['categories']}
     
     # bicycle 的 COCO category id 是 2（注意：COCO 的 id 从 1 开始，但 bicycle 是 2）
-    # 实际上 COCO 中 bicycle 的 category_id 是 2
     bicycle_cat_id = None
     for cat_id, cat in categories_dict.items():
         if cat['name'] == 'bicycle':
@@ -131,10 +130,10 @@ def prepare_coco_bicycle(coco_root, out_dir, split='train'):
         dst_img_path = out_img_dir / img_filename
         label_path = out_label_dir / (Path(img_filename).stem + '.txt')
         
-        # 复制或创建软链接（Windows 不支持软链接时使用复制）
+        # 复制或创建软链接
         try:
             if not dst_img_path.exists():
-                # Windows 上直接复制，Linux/Mac 上尝试创建软链接
+                # Windows 上直接复制
                 if os.name == 'nt':  # Windows
                     shutil.copy2(src_img_path, dst_img_path)
                 else:
@@ -159,7 +158,7 @@ def prepare_coco_bicycle(coco_root, out_dir, split='train'):
                 yolo_labels.append(f"0 {yolo_bbox[0]:.6f} {yolo_bbox[1]:.6f} {yolo_bbox[2]:.6f} {yolo_bbox[3]:.6f}\n")
                 total_boxes += 1
         
-        # 保存标签文件（即使没有有效 bbox 也创建空文件，但跳过这张图片）
+        # 保存标签文件，即使没有有效 bbox 也创建空文件，但跳过这张图片
         if yolo_labels:
             with open(label_path, 'w') as f:
                 f.writelines(yolo_labels)

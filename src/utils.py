@@ -13,7 +13,7 @@ def filter_bicycle_results(result, is_single_class=True):
     
     Args:
         result: ultralytics YOLO 的检测结果对象
-        is_single_class: 是否为单类数据集（True: class_id=0 是 bicycle, False: class_id=1 是 bicycle）
+        is_single_class: 是否为单类数据集
     
     Returns:
         dict: {
@@ -36,13 +36,14 @@ def filter_bicycle_results(result, is_single_class=True):
     """
     boxes = []
     
+    # 检查是否有检测框
     if result.boxes is None or len(result.boxes) == 0:
         return {'boxes': boxes}
     
     # 获取检测框数据
     box_data = result.boxes.data.cpu().numpy()  # [N, 6]: x1, y1, x2, y2, conf, cls
     
-    # 获取图片尺寸（用于归一化）
+    # 获取图片尺寸，用于归一化
     img_height, img_width = result.orig_shape[:2]
     
     for box in box_data:
@@ -50,8 +51,6 @@ def filter_bicycle_results(result, is_single_class=True):
         cls_id = int(cls_id)
         
         # 过滤 bicycle
-        # 单类数据集: class_id = 0 是 bicycle
-        # COCO80: class_id = 1 是 bicycle（COCO 中 bicycle 的索引是 1）
         target_class = 0 if is_single_class else 1
         if cls_id != target_class:
             continue

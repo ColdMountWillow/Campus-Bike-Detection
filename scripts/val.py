@@ -63,10 +63,21 @@ def main():
     print(f"Recall: {metrics.box.mr:.4f}")
     print("=" * 60)
     
-    # 输出保存路径
-    results_dir = Path(model.trainer.save_dir) if hasattr(model, 'trainer') else None
-    if results_dir and results_dir.exists():
-        print(f"\n验证结果已保存到: {results_dir}")
+    # 输出保存路径（ultralytics 会自动保存到 runs/detect/val）
+    # 尝试获取保存路径，如果无法获取则使用默认路径
+    try:
+        if hasattr(model, 'trainer') and model.trainer is not None and hasattr(model.trainer, 'save_dir'):
+            results_dir = Path(model.trainer.save_dir)
+            if results_dir.exists():
+                print(f"\n验证结果已保存到: {results_dir.absolute()}")
+        else:
+            # 默认保存路径（ultralytics 的标准路径）
+            default_results_dir = Path('runs/detect/val')
+            if default_results_dir.exists():
+                print(f"\n验证结果已保存到: {default_results_dir.absolute()}")
+    except Exception:
+        # 如果无法获取路径，跳过（ultralytics 已经在终端输出了保存路径）
+        pass
 
 
 if __name__ == '__main__':

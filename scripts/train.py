@@ -3,7 +3,7 @@
 """
 import argparse
 from pathlib import Path
-from ultralytics import YOLO
+from ultralytics import YOLO 
 
 
 def main():
@@ -11,7 +11,7 @@ def main():
     parser.add_argument('--data', type=str, default='data/coco_bicycle.yaml',
                         help='数据集配置文件路径（默认: data/coco_bicycle.yaml）')
     parser.add_argument('--model', type=str, default='yolov8n.pt',
-                        help='模型文件（默认: yolov8n.pt，可选: yolov8s.pt, yolov8m.pt 等）')
+                        help='模型文件（默认: yolov8n.pt，可选: yolov8n.pt/yolov8s.pt/yolov8m.pt/yolov8l.pt/yolov8x.pt）')
     parser.add_argument('--imgsz', type=int, default=640,
                         help='输入图片尺寸（默认: 640）')
     parser.add_argument('--epochs', type=int, default=20,
